@@ -282,6 +282,25 @@ app.whenReady().then(() => {
     });
     return result.canceled ? "" : result.filePaths[0];
   });
+  ipcMain.handle("fs:readdir", async (_, dirPath) => {
+    try {
+      const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+      const items = entries
+        .filter((e) => !e.name.startsWith("."))
+        .map((e) => ({
+          name: e.name,
+          path: path.join(dirPath, e.name),
+          isDirectory: e.isDirectory()
+        }))
+        .sort((a, b) => {
+          if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+      return { ok: true, items, parent: path.dirname(dirPath), current: dirPath };
+    } catch (error) {
+      return { ok: false, items: [], parent: dirPath, current: dirPath, error: String(error) };
+    }
+  });
 });
 
 app.on("before-quit", () => {

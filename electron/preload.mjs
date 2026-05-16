@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld("desktop", {
   setSettings: (settings) => ipcRenderer.invoke("settings:set", settings),
   selectAudio: () => ipcRenderer.invoke("dialog:audio"),
   selectFolder: () => ipcRenderer.invoke("dialog:folder"),
+  readDir: (dirPath) => ipcRenderer.invoke("fs:readdir", dirPath),
   toggleAlwaysOnTop: (enabled) => ipcRenderer.invoke("window:toggleTop", enabled),
   terminal: {
     create: (options) => ipcRenderer.invoke("terminal:create", options),

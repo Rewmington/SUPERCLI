@@ -288,6 +288,11 @@ button {
   background: var(--panel);
 }
 
+.toolbar-actions button.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .terminal-area {
   min-width: 0;
   min-height: 0;
@@ -474,4 +479,126 @@ button {
   .toolbar-actions {
     justify-content: flex-end;
   }
+}
+
+/* ===== 文件列表面板 ===== */
+
+.files-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  width: min(320px, 100vw);
+  height: 100%;
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  z-index: 18;
+}
+
+.files-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.files-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.files-panel-title strong {
+  font-weight: 600;
+}
+
+.files-panel-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.files-panel-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--panel-2);
+  font-size: 14px;
+}
+
+.files-panel-actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.files-panel-path {
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.files-panel-list {
+  overflow-y: auto;
+  padding: 6px 8px;
+}
+
+.files-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.files-panel-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.files-panel-item:hover {
+  border-color: var(--border);
+  background: var(--panel-2);
+}
+
+.files-panel-item.is-dir {
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.files-panel-item.is-dir:hover {
+  border-color: var(--accent);
+}
+
+.files-panel-item svg {
+  flex-shrink: 0;
+}
+
+.files-panel-empty {
+  padding: 20px 14px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
 }

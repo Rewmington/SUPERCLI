@@ -1,4 +1,4 @@
-import type { AppSettings, TerminalCreateResult, TerminalDataPayload, TerminalExitPayload } from "./types";
+import type { AppSettings, DirReadResult, TerminalCreateResult, TerminalDataPayload, TerminalExitPayload } from "./types";
 
 declare global {
   interface Window {
@@ -7,6 +7,7 @@ declare global {
       setSettings: (settings: AppSettings) => Promise<AppSettings>;
       selectAudio: () => Promise<string>;
       selectFolder: () => Promise<string>;
+      readDir: (dirPath: string) => Promise<DirReadResult>;
       toggleAlwaysOnTop: (enabled: boolean) => Promise<void>;
       terminal: {
         create: (options: Record<string, unknown>) => Promise<TerminalCreateResult>;

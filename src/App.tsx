@@ -6,6 +6,8 @@ import {
   ChevronDown,
   ChevronRight,
   Columns2,
+  File,
+  Folder,
   FolderOpen,
   Moon,
   PanelBottom,
@@ -20,7 +22,7 @@ import {
 } from "lucide-react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { TerminalPane } from "./components/TerminalPane";
-import type { AppSettings, LauncherCommand, LauncherPreset, TerminalPaneState, TerminalTabState } from "./types";
+import type { AppSettings, DirEntry, LauncherCommand, LauncherPreset, TerminalPaneState, TerminalTabState } from "./types";
 import { createId } from "./utils/id";
 import { playSound } from "./utils/sounds";
 
@@ -166,6 +168,10 @@ export function App() {
   const [status, setStatus] = useState("正在初始化工作台");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [expandedLaunchers, setExpandedLaunchers] = useState<Record<string, boolean>>({});
+  const [filesPanelOpen, setFilesPanelOpen] = useState(false);
+  const [filesPanelPath, setFilesPanelPath] = useState("");
+  const [filesPanelItems, setFilesPanelItems] = useState<DirEntry[]>([]);
+  const [filesPanelParent, setFilesPanelParent] = useState("");
   const pendingLaunchesRef = useRef(new Map<string, PendingLaunch>());
   const startedPanesRef = useRef(new Set<string>());
   const [launcherDraft, setLauncherDraft] = useState<LauncherPreset>({
@@ -327,6 +333,35 @@ export function App() {
 
   function toggleLauncher(launcherId: string) {
     setExpandedLaunchers((current) => ({ ...current, [launcherId]: !current[launcherId] }));
+  }
+
+  async function openFilesPanel() {
+    const folder = await window.desktop.selectFolder();
+    if (!folder) return;
+    await navigateFilesPanel(folder);
+    setFilesPanelOpen(true);
+  }
+
+  async function navigateFilesPanel(dirPath: string) {
+    const result = await window.desktop.readDir(dirPath);
+    if (result.ok) {
+      setFilesPanelPath(result.current);
+      setFilesPanelItems(result.items);
+      setFilesPanelParent(result.parent);
+      setStatus(`已打开目录：${result.current}`);
+    } else {
+      setStatus(`读取目录失败：${result.error || "未知错误"}`);
+    }
+  }
+
+  function toggleFilesPanel() {
+    if (filesPanelOpen) {
+      setFilesPanelOpen(false);
+    } else if (filesPanelPath) {
+      setFilesPanelOpen(true);
+    } else {
+      void openFilesPanel();
+    }
   }
 
   async function addLauncher() {
@@ -535,6 +570,7 @@ export function App() {
           <div className="toolbar-actions">
             <button title="新建终端" onClick={() => void createTerminalTab()}><Plus size={18} /></button>
             <button title="在指定目录打开终端" onClick={() => void openTerminalInFolder()}><FolderOpen size={18} /></button>
+            <button title={filesPanelOpen ? "关闭文件列表" : "打开文件列表"} className={filesPanelOpen ? "is-active" : ""} onClick={toggleFilesPanel}><Folder size={18} /></button>
             <button title="右侧分屏" onClick={() => void splitTerminal("horizontal")}><Columns2 size={18} /></button>
             <button title="下方分屏" onClick={() => void splitTerminal("vertical")}><PanelBottom size={18} /></button>
             <button title="设置" onClick={() => setSettingsOpen(true)}><Settings size={18} /></button>
@@ -577,6 +613,55 @@ export function App() {
           <span>{activePaneId ? `当前终端：${activePaneId}` : "未选择终端"}</span>
         </footer>
       </section>
+
+      {filesPanelOpen && (
+        <aside className="files-panel">
+          <header className="files-panel-header">
+            <div className="files-panel-title">
+              <Folder size={16} />
+              <strong>文件列表</strong>
+            </div>
+            <div className="files-panel-actions">
+              <button title="打开其他目录" onClick={() => void openFilesPanel()}><FolderOpen size={14} /></button>
+              <button title="刷新" onClick={() => void navigateFilesPanel(filesPanelPath)}>↻</button>
+              <button title="关闭文件列表" onClick={() => setFilesPanelOpen(false)}><X size={14} /></button>
+            </div>
+          </header>
+          <div className="files-panel-path" title={filesPanelPath}>
+            {filesPanelPath}
+          </div>
+          <div className="files-panel-list">
+            {filesPanelPath !== filesPanelParent && (
+              <button
+                className="files-panel-item is-dir"
+                onClick={() => void navigateFilesPanel(filesPanelParent)}
+                title="返回上级目录"
+              >
+                <Folder size={14} />
+                <span>..</span>
+              </button>
+            )}
+            {filesPanelItems.map((entry) => (
+              <button
+                key={entry.path}
+                className={`files-panel-item ${entry.isDirectory ? "is-dir" : ""}`}
+                onClick={() => {
+                  if (entry.isDirectory) {
+                    void navigateFilesPanel(entry.path);
+                  }
+                }}
+                title={entry.path}
+              >
+                {entry.isDirectory ? <Folder size={14} /> : <File size={14} />}
+                <span>{entry.name}</span>
+              </button>
+            ))}
+            {filesPanelItems.length === 0 && (
+              <div className="files-panel-empty">此目录为空</div>
+            )}
+          </div>
+        </aside>
+      )}
 
       {settingsOpen && (
         <aside className="settings-drawer">

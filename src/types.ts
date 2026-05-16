@@ -86,3 +86,17 @@ export interface TerminalExitPayload {
   id: string;
   exitCode: number;
 }
+
+export interface DirEntry {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+}
+
+export interface DirReadResult {
+  ok: boolean;
+  items: DirEntry[];
+  parent: string;
+  current: string;
+  error?: string;
+}
