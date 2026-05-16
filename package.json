@@ -42,6 +42,9 @@
     "appId": "com.supercli.desktop",
     "productName": "SUPER-CLI",
     "electronDist": "node_modules/electron/dist",
+    "electronLanguages": ["zh-CN", "en-US"],
+    "compression": "maximum",
+    "asar": true,
     "directories": {
       "output": "release"
     },
@@ -49,13 +52,36 @@
       "dist/**/*",
       "electron/**/*",
       "shared/**/*",
-      "package.json"
+      "package.json",
+      "!**/node_modules/node-pty/prebuilds/darwin-*/**",
+      "!**/node_modules/node-pty/prebuilds/linux-*/**",
+      "!**/node_modules/node-pty/prebuilds/win32-arm64/**",
+      "!**/node_modules/node-pty/deps/**",
+      "!**/node_modules/node-pty/build/Release/obj/**",
+      "!**/node_modules/node-pty/build/Release/*.tlog/**",
+      "!**/node_modules/node-pty/build/Release/*.pdb",
+      "!**/node_modules/node-pty/build/Release/*.lib",
+      "!**/node_modules/node-pty/build/Release/*.exp",
+      "!**/node_modules/node-pty/build/Release/*.ipdb",
+      "!**/node_modules/node-pty/build/Release/*.iobj",
+      "!**/node_modules/node-pty/third_party/conpty/*/win10-arm64/**",
+      "!**/node_modules/node-pty/src/**",
+      "!**/node_modules/node-pty/scripts/**",
+      "!**/node_modules/node-pty/tools/**",
+      "!**/node_modules/node-pty/binding.gyp",
+      "!**/node_modules/**/{test,tests,__tests__,example,examples,docs,doc,man,benchmark}/**",
+      "!**/node_modules/**/{*.md,*.markdown,*.ts,*.map,*.d.ts.map,LICENSE,LICENCE,CHANGELOG*,HISTORY*,AUTHORS,CONTRIBUTORS}",
+      "!**/node_modules/**/.bin/**",
+      "!**/node_modules/**/.github/**",
+      "!**/node_modules/**/.vscode/**"
     ],
     "win": {
       "signAndEditExecutable": false,
       "target": [
-        "nsis",
-        "portable"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
       ],
       "artifactName": "SUPER-CLI-${version}-${arch}.${ext}"
     },
@@ -64,7 +90,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "SUPER-CLI"
+      "shortcutName": "SUPER-CLI",
+      "differentialPackage": false
     }
   }
 }
