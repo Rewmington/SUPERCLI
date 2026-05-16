@@ -1,0 +1,70 @@
+{
+  "name": "super-cli",
+  "version": "0.1.0",
+  "description": "SUPER-CLI - 面向本地 AI 命令行工具的桌面增强终端",
+  "author": "Codex",
+  "license": "MIT",
+  "type": "module",
+  "main": "electron/main.mjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron . --dev-server=http://127.0.0.1:5173\"",
+    "build": "tsc && vite build",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder",
+    "pack:dir": "npm run build && electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild": "electron-rebuild -f -w node-pty"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "electron-store": "^10.1.0",
+    "lucide-react": "^0.561.0",
+    "node-pty": "^1.0.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-resizable-panels": "^3.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.supercli.desktop",
+    "productName": "SUPER-CLI",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "shared/**/*",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "SUPER-CLI-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SUPER-CLI"
+    }
+  }
+}
