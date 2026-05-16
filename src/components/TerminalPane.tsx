@@ -7,8 +7,10 @@ interface TerminalPaneProps {
   pane: TerminalPaneState;
   settings: AppSettings;
   active: boolean;
+  showClose: boolean;
   onFocus: (id: string) => void;
   onReady: (id: string, cols: number, rows: number) => void;
+  onClose: (id: string) => void;
 }
 
 const darkTheme = {
@@ -41,7 +43,7 @@ const lightTheme = {
   white: "#fffaf0"
 };
 
-export function TerminalPane({ pane, settings, active, onFocus, onReady }: TerminalPaneProps) {
+export function TerminalPane({ pane, settings, active, showClose, onFocus, onReady, onClose }: TerminalPaneProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -109,7 +111,12 @@ export function TerminalPane({ pane, settings, active, onFocus, onReady }: Termi
     <section className={`terminal-pane ${active ? "is-active" : ""}`} onMouseDown={() => onFocus(pane.id)}>
       <header className="pane-header">
         <span>{pane.title}</span>
-        <span>{pane.status}</span>
+        <div className="pane-header-right">
+          <span>{pane.status}</span>
+          {showClose && (
+            <button className="pane-close" title="关闭此面板" onClick={() => onClose(pane.id)}>✕</button>
+          )}
+        </div>
       </header>
       <div className="terminal-surface" ref={containerRef} />
     </section>

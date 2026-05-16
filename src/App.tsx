@@ -172,6 +172,7 @@ export function App() {
   const [filesPanelPath, setFilesPanelPath] = useState("");
   const [filesPanelItems, setFilesPanelItems] = useState<DirEntry[]>([]);
   const [filesPanelParent, setFilesPanelParent] = useState("");
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; entry: DirEntry } | null>(null);
   const pendingLaunchesRef = useRef(new Map<string, PendingLaunch>());
   const startedPanesRef = useRef(new Set<string>());
   const [launcherDraft, setLauncherDraft] = useState<LauncherPreset>({
@@ -322,6 +323,29 @@ export function App() {
     setStatus(`已关闭标签：${tab.title}`);
   }
 
+  function closePane(paneId: string) {
+    if (!activeTab) return;
+    // 如果标签只有一个面板，关闭整个标签
+    if (activeTab.panes.length <= 1) {
+      closeTab(activeTab.id);
+      return;
+    }
+    pendingLaunchesRef.current.delete(paneId);
+    startedPanesRef.current.delete(paneId);
+    void window.desktop.terminal.close(paneId);
+    setTabs((current) =>
+      current.map((tab) => {
+        if (tab.id !== activeTab.id) return tab;
+        const nextPanes = tab.panes.filter((p) => p.id !== paneId);
+        const nextActive = tab.activePaneId === paneId
+          ? (nextPanes.at(-1)?.id || "")
+          : tab.activePaneId;
+        return { ...tab, panes: nextPanes, activePaneId: nextActive };
+      })
+    );
+    setStatus("已关闭分屏终端");
+  }
+
   function sendCommand(command: string) {
     if (!activePaneId) {
       setStatus("请先打开一个终端再发送命令");
@@ -362,6 +386,65 @@ export function App() {
     } else {
       void openFilesPanel();
     }
+  }
+
+  function handleFileContextMenu(event: React.MouseEvent, entry: DirEntry) {
+    event.preventDefault();
+    event.stopPropagation();
+    setContextMenu({ x: event.clientX, y: event.clientY, entry });
+  }
+
+  function closeContextMenu() {
+    setContextMenu(null);
+  }
+
+  async function ctxOpenFile() {
+    if (!contextMenu) return;
+    await window.desktop.openFile(contextMenu.entry.path);
+    closeContextMenu();
+  }
+
+  function ctxShowInExplorer() {
+    if (!contextMenu) return;
+    void window.desktop.showInExplorer(contextMenu.entry.path);
+    closeContextMenu();
+  }
+
+  function ctxCopyPath() {
+    if (!contextMenu) return;
+    void window.desktop.copyPath(contextMenu.entry.path);
+    setStatus(`已复制路径：${contextMenu.entry.path}`);
+    closeContextMenu();
+  }
+
+  async function ctxTrashFile() {
+    if (!contextMenu) return;
+    const result = await window.desktop.trashFile(contextMenu.entry.path);
+    if (result.ok) {
+      setStatus(`已删除到回收站：${contextMenu.entry.name}`);
+      void navigateFilesPanel(filesPanelPath);
+    } else {
+      setStatus(`删除失败：${result.error}`);
+    }
+    closeContextMenu();
+  }
+
+  async function ctxProperties() {
+    if (!contextMenu) return;
+    const props = await window.desktop.getProperties(contextMenu.entry.path);
+    if (props.ok) {
+      const sizeKB = Math.round((props.size as number) / 1024);
+      const info = [
+        `名称：${props.name}`,
+        `路径：${props.path}`,
+        `类型：${props.isDirectory ? "文件夹" : "文件"}`,
+        `大小：${sizeKB} KB`,
+        `创建时间：${(props.created as string).replace("T", " ").slice(0, 19)}`,
+        `修改时间：${(props.modified as string).replace("T", " ").slice(0, 19)}`
+      ].join("\n");
+      setStatus(info);
+    }
+    closeContextMenu();
   }
 
   async function addLauncher() {
@@ -588,12 +671,14 @@ export function App() {
                     pane={pane}
                     settings={settings}
                     active={pane.id === activeTab.activePaneId}
+                    showClose={activeTab.panes.length > 1}
                     onReady={(paneId, cols, rows) => {
                       void startPendingTerminal(paneId, cols, rows);
                     }}
                     onFocus={(paneId) =>
                       setTabs((current) => current.map((tab) => (tab.id === activeTab.id ? { ...tab, activePaneId: paneId } : tab)))
                     }
+                    onClose={(paneId) => closePane(paneId)}
                   />
                   </Panel>
                 </Fragment>
@@ -648,8 +733,11 @@ export function App() {
                 onClick={() => {
                   if (entry.isDirectory) {
                     void navigateFilesPanel(entry.path);
+                  } else {
+                    void window.desktop.openFile(entry.path);
                   }
                 }}
+                onContextMenu={(e) => handleFileContextMenu(e, entry)}
                 title={entry.path}
               >
                 {entry.isDirectory ? <Folder size={14} /> : <File size={14} />}
@@ -661,6 +749,21 @@ export function App() {
             )}
           </div>
         </aside>
+      )}
+
+      {contextMenu && (
+        <div className="ctx-overlay" onClick={closeContextMenu} onContextMenu={(e) => { e.preventDefault(); closeContextMenu(); }}>
+          <div className="ctx-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+            <button onClick={() => void ctxOpenFile()}>打开文件</button>
+            <button onClick={ctxShowInExplorer}>在资源管理器中打开</button>
+            <div className="ctx-divider" />
+            <button onClick={ctxCopyPath}>复制文件路径</button>
+            <div className="ctx-divider" />
+            <button className="ctx-danger" onClick={() => void ctxTrashFile()}>删除（到回收站）</button>
+            <div className="ctx-divider" />
+            <button onClick={() => void ctxProperties()}>属性</button>
+          </div>
+        </div>
       )}
 
       {settingsOpen && (

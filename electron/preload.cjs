@@ -19,6 +19,11 @@ contextBridge.exposeInMainWorld("desktop", {
   selectAudio: () => ipcRenderer.invoke("dialog:audio"),
   selectFolder: () => ipcRenderer.invoke("dialog:folder"),
   readDir: (dirPath) => ipcRenderer.invoke("fs:readdir", dirPath),
+  openFile: (filePath) => ipcRenderer.invoke("fs:openFile", filePath),
+  showInExplorer: (filePath) => ipcRenderer.invoke("fs:showInExplorer", filePath),
+  copyPath: (filePath) => ipcRenderer.invoke("fs:copyPath", filePath),
+  trashFile: (filePath) => ipcRenderer.invoke("fs:trashFile", filePath),
+  getProperties: (filePath) => ipcRenderer.invoke("fs:getProperties", filePath),
   toggleAlwaysOnTop: (enabled) => ipcRenderer.invoke("window:toggleTop", enabled),
   terminal: {
     create: (options) => ipcRenderer.invoke("terminal:create", options),

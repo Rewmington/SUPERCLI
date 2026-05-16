@@ -8,6 +8,11 @@ declare global {
       selectAudio: () => Promise<string>;
       selectFolder: () => Promise<string>;
       readDir: (dirPath: string) => Promise<DirReadResult>;
+      openFile: (filePath: string) => Promise<void>;
+      showInExplorer: (filePath: string) => Promise<void>;
+      copyPath: (filePath: string) => Promise<void>;
+      trashFile: (filePath: string) => Promise<{ ok: boolean; error?: string }>;
+      getProperties: (filePath: string) => Promise<Record<string, unknown>>;
       toggleAlwaysOnTop: (enabled: boolean) => Promise<void>;
       terminal: {
         create: (options: Record<string, unknown>) => Promise<TerminalCreateResult>;

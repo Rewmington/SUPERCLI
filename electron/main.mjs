@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage } from "electron";
+import { app, BrowserWindow, Menu, Tray, ipcMain, dialog, nativeImage, shell, clipboard } from "electron";
 import Store from "electron-store";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
@@ -86,7 +86,7 @@ function createWindow() {
     if (getSettings().minimizeToTray && !isQuitting) {
       event.preventDefault();
       mainWindow.hide();
-      mainWindow.webContents.send("app:status", "已最小化到系统托盘");
+      safeSend("app:status", "已最小化到系统托盘");
     } else {
       isQuitting = true;
     }
@@ -98,8 +98,8 @@ function buildMenu() {
     {
       label: "文件",
       submenu: [
-        { label: "新建终端", accelerator: "CmdOrCtrl+Shift+T", click: () => mainWindow?.webContents.send("menu:new-terminal") },
-        { label: "关闭当前标签", accelerator: "CmdOrCtrl+Shift+W", click: () => mainWindow?.webContents.send("menu:close-tab") },
+        { label: "新建终端", accelerator: "CmdOrCtrl+Shift+T", click: () => safeSend("menu:new-terminal") },
+        { label: "关闭当前标签", accelerator: "CmdOrCtrl+Shift+W", click: () => safeSend("menu:close-tab") },
         { type: "separator" },
         { label: "退出", click: () => { isQuitting = true; app.quit(); } }
       ]
@@ -107,8 +107,8 @@ function buildMenu() {
     {
       label: "视图",
       submenu: [
-        { label: "横向分屏", accelerator: "CmdOrCtrl+Shift+D", click: () => mainWindow?.webContents.send("menu:split-down") },
-        { label: "纵向分屏", accelerator: "CmdOrCtrl+Shift+R", click: () => mainWindow?.webContents.send("menu:split-right") },
+        { label: "横向分屏", accelerator: "CmdOrCtrl+Shift+D", click: () => safeSend("menu:split-down") },
+        { label: "纵向分屏", accelerator: "CmdOrCtrl+Shift+R", click: () => safeSend("menu:split-right") },
         { type: "separator" },
         { label: "重新载入", role: "reload" },
         { label: "全屏切换", role: "togglefullscreen" }
@@ -125,7 +125,7 @@ function buildMenu() {
             const settings = { ...getSettings(), stayOnTop: item.checked };
             store.set("settings", settings);
             mainWindow?.setAlwaysOnTop(item.checked);
-            mainWindow?.webContents.send("settings:changed", settings);
+            safeSend("settings:changed", settings);
           }
         },
         { label: "显示窗口", click: () => showMainWindow() },
@@ -148,11 +148,21 @@ function createTray() {
   tray.setToolTip("SUPER-CLI");
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: "显示窗口", click: () => showMainWindow() },
-    { label: "新建终端", click: () => mainWindow?.webContents.send("menu:new-terminal") },
+    { label: "新建终端", click: () => safeSend("menu:new-terminal") },
     { type: "separator" },
     { label: "退出", click: () => { isQuitting = true; app.quit(); } }
   ]));
   tray.on("double-click", () => showMainWindow());
+}
+
+function safeSend(channel, payload) {
+  try {
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send(channel, payload);
+    }
+  } catch {
+    // Window already destroyed, ignore.
+  }
 }
 
 function showMainWindow() {
@@ -212,14 +222,14 @@ function createTerminal(_, options = {}) {
     });
 
     terminals.set(id, terminal);
-    terminal.onData((data) => mainWindow?.webContents.send("terminal:data", { id, data }));
+    terminal.onData((data) => safeSend("terminal:data", { id, data }));
     terminal.onExit(({ exitCode }) => {
       writeLog(`终端退出 id=${id} exitCode=${exitCode}`);
       terminals.delete(id);
-      mainWindow?.webContents.send("terminal:exit", { id, exitCode });
+      safeSend("terminal:exit", { id, exitCode });
     });
 
-    mainWindow?.webContents.send("terminal:data", {
+    safeSend("terminal:data", {
       id,
       data: `\r\n\x1b[36m已连接终端：${displayLabel}\x1b[0m\r\n`
     });
@@ -227,7 +237,7 @@ function createTerminal(_, options = {}) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     writeLog(`终端创建失败 id=${id} message=${message}`);
-    mainWindow?.webContents.send("terminal:error", { id, message });
+    safeSend("terminal:error", { id, message });
     throw error;
   }
 }
@@ -256,7 +266,7 @@ app.whenReady().then(() => {
   ipcMain.handle("settings:set", (_, settings) => {
     store.set("settings", settings);
     mainWindow?.setAlwaysOnTop(Boolean(settings.stayOnTop));
-    mainWindow?.webContents.send("settings:changed", settings);
+    safeSend("settings:changed", settings);
     buildMenu();
     return settings;
   });
@@ -299,6 +309,40 @@ app.whenReady().then(() => {
       return { ok: true, items, parent: path.dirname(dirPath), current: dirPath };
     } catch (error) {
       return { ok: false, items: [], parent: dirPath, current: dirPath, error: String(error) };
+    }
+  });
+  ipcMain.handle("fs:openFile", async (_, filePath) => {
+    await shell.openPath(filePath);
+  });
+  ipcMain.handle("fs:showInExplorer", (_, filePath) => {
+    shell.showItemInFolder(filePath);
+  });
+  ipcMain.handle("fs:copyPath", (_, filePath) => {
+    clipboard.writeText(filePath);
+  });
+  ipcMain.handle("fs:trashFile", async (_, filePath) => {
+    try {
+      await shell.trashItem(filePath);
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: String(error) };
+    }
+  });
+  ipcMain.handle("fs:getProperties", async (_, filePath) => {
+    try {
+      const stat = await fs.promises.stat(filePath);
+      return {
+        ok: true,
+        name: path.basename(filePath),
+        path: filePath,
+        size: stat.size,
+        isDirectory: stat.isDirectory(),
+        created: stat.birthtime.toISOString(),
+        modified: stat.mtime.toISOString(),
+        accessed: stat.atime.toISOString()
+      };
+    } catch (error) {
+      return { ok: false, error: String(error) };
     }
   });
 });
