@@ -173,6 +173,7 @@ export function App() {
   const [filesPanelItems, setFilesPanelItems] = useState<DirEntry[]>([]);
   const [filesPanelParent, setFilesPanelParent] = useState("");
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; entry: DirEntry } | null>(null);
+  const [propertiesDialog, setPropertiesDialog] = useState<Record<string, unknown> | null>(null);
   const pendingLaunchesRef = useRef(new Map<string, PendingLaunch>());
   const startedPanesRef = useRef(new Set<string>());
   const [launcherDraft, setLauncherDraft] = useState<LauncherPreset>({
@@ -433,16 +434,9 @@ export function App() {
     if (!contextMenu) return;
     const props = await window.desktop.getProperties(contextMenu.entry.path);
     if (props.ok) {
-      const sizeKB = Math.round((props.size as number) / 1024);
-      const info = [
-        `名称：${props.name}`,
-        `路径：${props.path}`,
-        `类型：${props.isDirectory ? "文件夹" : "文件"}`,
-        `大小：${sizeKB} KB`,
-        `创建时间：${(props.created as string).replace("T", " ").slice(0, 19)}`,
-        `修改时间：${(props.modified as string).replace("T", " ").slice(0, 19)}`
-      ].join("\n");
-      setStatus(info);
+      setPropertiesDialog(props);
+    } else {
+      setStatus(`读取属性失败：${String(props.error || "未知错误")}`);
     }
     closeContextMenu();
   }
@@ -762,6 +756,29 @@ export function App() {
             <button className="ctx-danger" onClick={() => void ctxTrashFile()}>删除（到回收站）</button>
             <div className="ctx-divider" />
             <button onClick={() => void ctxProperties()}>属性</button>
+          </div>
+        </div>
+      )}
+
+      {propertiesDialog && (
+        <div className="dialog-overlay" onClick={() => setPropertiesDialog(null)}>
+          <div className="properties-dialog" onClick={(e) => e.stopPropagation()}>
+            <header className="properties-header">
+              <strong>文件属性</strong>
+              <button onClick={() => setPropertiesDialog(null)}><X size={16} /></button>
+            </header>
+            <div className="properties-body">
+              <div><span>名称</span><code>{String(propertiesDialog.name || "")}</code></div>
+              <div><span>路径</span><code>{String(propertiesDialog.path || "")}</code></div>
+              <div><span>类型</span><code>{propertiesDialog.isDirectory ? "文件夹" : "文件"}</code></div>
+              <div><span>大小</span><code>{Math.round(Number(propertiesDialog.size || 0) / 1024)} KB</code></div>
+              <div><span>创建时间</span><code>{String(propertiesDialog.created || "").replace("T", " ").slice(0, 19)}</code></div>
+              <div><span>修改时间</span><code>{String(propertiesDialog.modified || "").replace("T", " ").slice(0, 19)}</code></div>
+              <div><span>访问时间</span><code>{String(propertiesDialog.accessed || "").replace("T", " ").slice(0, 19)}</code></div>
+            </div>
+            <footer className="properties-footer">
+              <button className="primary" onClick={() => setPropertiesDialog(null)}>确定</button>
+            </footer>
           </div>
         </div>
       )}
