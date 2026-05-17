@@ -1,6 +1,6 @@
 # SUPER-CLI
 
-面向 Windows 优先适配的桌面增强终端工具，用于集中管理 Codex、Claude Code 以及其他本地 AI 命令行工具。项目采用 Electron + React + TypeScript + node-pty + xterm.js 构建。
+SUPER-CLI 是一款面向 Windows 的桌面增强终端工具，用于集中管理 Codex、Claude Code 以及其他本地 AI 命令行工具。项目采用 Electron + React + TypeScript + node-pty + xterm.js 构建，目标是把本地 AI CLI、项目终端和基础文件操作整合到一个统一的中文界面里。
 
 ## 功能概览
 
@@ -13,20 +13,29 @@
 - 文件列表面板：支持显示当前目录文件/文件夹、进入子目录、返回上级目录、刷新、开关显示
 - 文件右键菜单：支持打开文件、在资源管理器中打开、复制文件路径、删除到回收站、属性
 - 文件属性弹窗：展示名称、路径、类型、大小、创建时间、修改时间、访问时间
-- 中文界面：菜单、按钮、设置、状态提示均为简体中文
-- 提示音系统：支持新建终端、任务完成、AI 响应完成、错误提醒，自带蜂鸣音并支持自定义音频
+- 中文界面：保留应用内中文 UI，移除无效的顶部原生菜单白条
+- 提示音系统：内置一套科技风提示音，可替换为自定义音频，并显示当前音频路径或内置来源
+- 托盘后台运行：最小化到托盘时显示有效图标，可从托盘恢复窗口
 - 实用设置：深浅色主题、终端字体字号、窗口置顶、后台静默运行
+
+## 第三版亮点（v0.3.0）
+
+- 移除窗口顶部无效的原生菜单白条，只保留应用内中文界面
+- 托盘图标从空白占位改为真实可识别图标
+- 内置提示音升级为科技风提示音组
+- 提示音设置面板增加当前音频路径 / 内置来源显示
+- 构建语言仅保留 `zh-CN`，进一步减少英文界面残留与安装包体积
 
 ## 项目结构
 
 ```text
 clidemocodex/
 ├─ electron/
-│  ├─ main.mjs          # Electron 主进程、终端后端、菜单、托盘、设置存储
+│  ├─ main.mjs          # Electron 主进程、终端后端、托盘、设置存储、文件操作 IPC
 │  ├─ preload.cjs       # 安全 IPC 桥
 │  └─ preload.mjs       # 预留 ESM 版本
 ├─ shared/
-│  └─ defaults.mjs      # 默认设置、启动项、收藏命令
+│  └─ defaults.mjs      # 默认设置、启动项、命令列表
 ├─ src/
 │  ├─ components/
 │  │  └─ TerminalPane.tsx
@@ -39,10 +48,13 @@ clidemocodex/
 │  ├─ styles.css
 │  ├─ types.ts
 │  └─ vite-env.d.ts
+├─ LICENSE              # MIT 许可证
 ├─ Require.md           # 原始需求
 ├─ PROJECT_PLAN.md      # 开发计划暂存
+├─ README.md
 ├─ index.html
 ├─ package.json
+├─ package-lock.json
 ├─ tsconfig.json
 └─ vite.config.ts
 ```
@@ -87,7 +99,7 @@ npm run build
 
 ## 打包桌面程序
 
-生成免安装版目录：
+生成免安装目录版：
 
 ```powershell
 npm run pack:dir
@@ -99,7 +111,7 @@ npm run pack:dir
 release/win-unpacked/SUPER-CLI.exe
 ```
 
-生成安装包和便携版：
+生成安装包：
 
 ```powershell
 npm run dist
@@ -110,11 +122,11 @@ npm run dist
 - `SUPER-CLI-0.3.0-x64.exe`（Windows x64 安装包）
 - `win-unpacked/SUPER-CLI.exe`（免安装目录版）
 
-如果 `npm run dist` 在下载 `winCodeSign`、`nsis` 或 Electron 运行时资源时超时，可以先使用 `npm run pack:dir` 产出免安装版；等网络可访问 GitHub 后再重新执行 `npm run dist`。
+如果 `npm run dist` 在下载 `winCodeSign`、`nsis` 或 Electron 运行时资源时超时，可以先使用 `npm run pack:dir` 产出免安装目录版；等网络可访问 GitHub 后再重新执行 `npm run dist`。
 
 ## 配置说明
 
-应用设置由 `electron-store` 保存到用户配置目录，首次启动会使用 [shared/defaults.mjs](D:/AAADevelop/clidemocodex/shared/defaults.mjs) 中的默认配置。
+应用设置由 `electron-store` 保存到用户配置目录，首次启动会使用 `shared/defaults.mjs` 中的默认配置。
 
 主要配置项：
 
@@ -143,6 +155,10 @@ npm run dist
 
 当前版本为 **v0.3.0**，相比前一版已完成以下增强：
 
+- 移除顶部无效原生菜单白条
+- 修复后台静默运行时托盘没有图标的问题
+- 内置提示音升级为科技风提示音组
+- 提示音设置中显示当前音频路径 / 内置来源
 - 新增文件列表 / 文件资源管理器面板
 - 支持目录导航、刷新、开关显示
 - 文件右键菜单：打开文件、在资源管理器中打开、复制路径、删除到回收站、属性
@@ -151,13 +167,13 @@ npm run dist
 - 修复关闭软件时 `Object has been destroyed` 主进程错误
 - 启动器扩展为 Codex、Claude Code、PowerShell、npm、Git 五类工具
 - 每类启动器带可展开的常用命令子列表
-- 安装包体积优化与中英文语言裁剪
+- 安装包体积优化，并仅保留中文运行时语言包
 
 后续仍可继续增强：
 
-- 更完整的快捷键录制器
 - 文件右键菜单补充复制 / 粘贴 / 重命名等操作
 - 分屏拖拽布局记忆
+- 更完整的快捷键录制器
 - 命令运行完成识别规则
 - 更细致的 AI 响应完成检测
 - Windows 原生伪控制台兼容性测试
