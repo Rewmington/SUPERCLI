@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
+import { WebglAddon } from "@xterm/addon-webgl";
 import type { AppSettings, TerminalPaneState } from "../types";
 
 interface TerminalPaneProps {
@@ -64,9 +65,26 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);
-    terminal.open(container);
-    fitAddon.fit();
-    terminal.focus();
+
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      if (width > 0 && height > 0) {
+        ro.disconnect();
+        terminal.open(container);
+        fitAddon.fit();
+
+        try {
+          const webglAddon = new WebglAddon();
+          terminal.loadAddon(webglAddon);
+        } catch {
+          // Fall back to canvas if WebGL fails
+        }
+
+        terminal.focus();
+        onReady(pane.id, terminal.cols, terminal.rows);
+      }
+    });
+    ro.observe(container);
 
     terminal.onData((data) => {
       void window.desktop.terminal.write({ id: pane.id, data });
@@ -84,10 +102,10 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
       void window.desktop.terminal.resize({ id: pane.id, cols: terminal.cols, rows: terminal.rows });
     });
     resizeObserver.observe(container);
-    onReady(pane.id, terminal.cols, terminal.rows);
 
     return () => {
       unsubscribeData();
+      ro.disconnect();
       resizeObserver.disconnect();
       terminal.dispose();
     };
