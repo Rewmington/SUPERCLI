@@ -107,7 +107,7 @@ npm run dist
 
 打包产物输出到 `release/`，默认包含：
 
-- `SUPER-CLI-0.2.0-x64.exe`（Windows x64 安装包）
+- `SUPER-CLI-0.3.0-x64.exe`（Windows x64 安装包）
 - `win-unpacked/SUPER-CLI.exe`（免安装目录版）
 
 如果 `npm run dist` 在下载 `winCodeSign`、`nsis` 或 Electron 运行时资源时超时，可以先使用 `npm run pack:dir` 产出免安装版；等网络可访问 GitHub 后再重新执行 `npm run dist`。
@@ -141,7 +141,7 @@ npm run dist
 
 ## 当前版本说明
 
-当前版本为 **v0.2.0**，相比首发版已完成以下增强：
+当前版本为 **v0.3.0**，相比前一版已完成以下增强：
 
 - 新增文件列表 / 文件资源管理器面板
 - 支持目录导航、刷新、开关显示

@@ -65,7 +65,7 @@ function createWindow() {
     minHeight: 640,
     title: "SUPER-CLI",
     backgroundColor: "#101419",
-    autoHideMenuBar: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
@@ -74,6 +74,7 @@ function createWindow() {
   });
 
   mainWindow.setAlwaysOnTop(Boolean(getSettings().stayOnTop));
+  mainWindow.removeMenu();
 
   const devServerUrl = getDevServerUrl();
   if (devServerUrl) {
@@ -94,56 +95,22 @@ function createWindow() {
 }
 
 function buildMenu() {
-  const template = [
-    {
-      label: "文件",
-      submenu: [
-        { label: "新建终端", accelerator: "CmdOrCtrl+Shift+T", click: () => safeSend("menu:new-terminal") },
-        { label: "关闭当前标签", accelerator: "CmdOrCtrl+Shift+W", click: () => safeSend("menu:close-tab") },
-        { type: "separator" },
-        { label: "退出", click: () => { isQuitting = true; app.quit(); } }
-      ]
-    },
-    {
-      label: "视图",
-      submenu: [
-        { label: "横向分屏", accelerator: "CmdOrCtrl+Shift+D", click: () => safeSend("menu:split-down") },
-        { label: "纵向分屏", accelerator: "CmdOrCtrl+Shift+R", click: () => safeSend("menu:split-right") },
-        { type: "separator" },
-        { label: "重新载入", role: "reload" },
-        { label: "全屏切换", role: "togglefullscreen" }
-      ]
-    },
-    {
-      label: "窗口",
-      submenu: [
-        {
-          label: "窗口置顶",
-          type: "checkbox",
-          checked: Boolean(getSettings().stayOnTop),
-          click: (item) => {
-            const settings = { ...getSettings(), stayOnTop: item.checked };
-            store.set("settings", settings);
-            mainWindow?.setAlwaysOnTop(item.checked);
-            safeSend("settings:changed", settings);
-          }
-        },
-        { label: "显示窗口", click: () => showMainWindow() },
-        { label: "隐藏窗口", click: () => mainWindow?.hide() }
-      ]
-    },
-    {
-      label: "帮助",
-      submenu: [
-        { label: "关于", click: () => dialog.showMessageBox(mainWindow, { type: "info", title: "关于", message: "SUPER-CLI", detail: "面向本地 AI CLI 工作流的桌面增强终端。" }) }
-      ]
-    }
-  ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  Menu.setApplicationMenu(null);
+}
+
+function createTrayIcon() {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <rect x="6" y="6" width="52" height="52" rx="12" fill="#151b22"/>
+      <rect x="10" y="10" width="44" height="44" rx="10" fill="#0f141a" stroke="#41c7b9" stroke-width="3"/>
+      <path d="M20 24 L29 32 L20 40" fill="none" stroke="#41c7b9" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="33" y="38" width="12" height="4" rx="2" fill="#f5b85b"/>
+    </svg>`;
+  return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
 }
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
+  const icon = createTrayIcon();
   tray = new Tray(icon);
   tray.setToolTip("SUPER-CLI");
   tray.setContextMenu(Menu.buildFromTemplate([

@@ -475,6 +475,36 @@ button {
   gap: 8px;
 }
 
+.sound-paths {
+  display: grid;
+  gap: 8px;
+}
+
+.sound-paths > div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.sound-paths span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.sound-paths code {
+  display: block;
+  padding: 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: var(--bg);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 11px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 .segmented button {
   width: 100%;
 }

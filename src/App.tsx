@@ -837,6 +837,12 @@ export function App() {
               <button onClick={() => void chooseSound("error")}><Bell size={16} />报错提醒</button>
               <button onClick={() => void chooseSound("newTerminal")}><Plus size={16} />新建终端</button>
             </div>
+            <div className="sound-paths">
+              <div><span>AI 响应完成</span><code>{settings.sounds.aiDone || "内置：科技提示音"}</code></div>
+              <div><span>任务完成</span><code>{settings.sounds.taskDone || "内置：科技提示音"}</code></div>
+              <div><span>报错提醒</span><code>{settings.sounds.error || "内置：科技提示音"}</code></div>
+              <div><span>新建终端</span><code>{settings.sounds.newTerminal || "内置：科技提示音"}</code></div>
+            </div>
           </section>
 
           <section className="setting-block">
