@@ -104,6 +104,22 @@ export const defaultSettings = {
         { id: "git-stash", name: "暂存改动", command: "git stash" },
         { id: "git-stash-pop", name: "恢复暂存", command: "git stash pop" }
       ]
+    },
+    {
+      id: "hermes",
+      name: "Hermes Agent",
+      command: "hermes",
+      args: [],
+      cwd: "",
+      description: "启动 Hermes Agent",
+      commands: [
+        { id: "hermes-chat", name: "启动对话", command: "hermes chat" },
+        { id: "hermes-help", name: "查看帮助", command: "/help" },
+        { id: "hermes-exit", name: "退出对话", command: "/exit" },
+        { id: "hermes-reset", name: "重置会话", command: "/reset" },
+        { id: "hermes-clear", name: "清空屏幕", command: "/clear" },
+        { id: "hermes-model", name: "切换模型", command: "/model " }
+      ]
     }
   ],
   favorites: []

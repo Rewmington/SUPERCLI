@@ -109,12 +109,21 @@ const builtInLauncherCommands: Record<string, LauncherCommand[]> = {
     { id: "git-add-all", name: "暂存全部", command: "git add ." },
     { id: "git-stash", name: "暂存改动", command: "git stash" },
     { id: "git-stash-pop", name: "恢复暂存", command: "git stash pop" }
+  ],
+  hermes: [
+    { id: "hermes-chat", name: "启动对话", command: "hermes chat" },
+    { id: "hermes-help", name: "查看帮助", command: "/help" },
+    { id: "hermes-exit", name: "退出对话", command: "/exit" },
+    { id: "hermes-reset", name: "重置会话", command: "/reset" },
+    { id: "hermes-clear", name: "清空屏幕", command: "/clear" },
+    { id: "hermes-model", name: "切换模型", command: "/model " }
   ]
 };
 
 const builtInLauncherDefs: LauncherPreset[] = [
   { id: "npm", name: "npm", command: "npm", args: [], cwd: "", description: "Node.js 包管理工具", commands: builtInLauncherCommands.npm },
-  { id: "git", name: "Git", command: "git", args: [], cwd: "", description: "版本控制工具", commands: builtInLauncherCommands.git }
+  { id: "git", name: "Git", command: "git", args: [], cwd: "", description: "版本控制工具", commands: builtInLauncherCommands.git },
+  { id: "hermes", name: "Hermes Agent", command: "hermes", args: [], cwd: "", description: "启动 Hermes Agent", commands: builtInLauncherCommands.hermes }
 ];
 
 function mergeLauncherCommands(loaded: AppSettings): AppSettings {
