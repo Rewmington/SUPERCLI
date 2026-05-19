@@ -9,6 +9,9 @@ import { defaultSettings } from "../shared/defaults.mjs";
 import * as pty from "node-pty";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const projectRoot = path.join(__dirname, "..");
+const iconSvgPath = path.join(projectRoot, "assets", "app-icon.svg");
+const iconIcoPath = path.join(projectRoot, "assets", "app-icon.ico");
 const store = new Store({ defaults: { settings: defaultSettings } });
 const terminals = new Map();
 
@@ -57,14 +60,17 @@ function resolveShellArgs(shell, explicitArgs = []) {
 	return [];
 }
 
+app.setAppUserModelId("com.supercli.desktop");
+
 function createWindow() {
+  const resolvedWindowIcon = fs.existsSync(iconIcoPath) ? iconIcoPath : createWindowIcon();
   mainWindow = new BrowserWindow({
     width: 1320,
     height: 820,
     minWidth: 1040,
     minHeight: 640,
     title: "SUPER-CLI",
-    icon: createTrayIcon(),
+    icon: resolvedWindowIcon,
     backgroundColor: "#101419",
     autoHideMenuBar: true,
     webPreferences: {
@@ -75,6 +81,7 @@ function createWindow() {
   });
 
   mainWindow.setAlwaysOnTop(Boolean(getSettings().stayOnTop));
+  mainWindow.setIcon(createWindowIcon());
   mainWindow.removeMenu();
 
   const devServerUrl = getDevServerUrl();
@@ -97,15 +104,54 @@ function buildMenu() {
   Menu.setApplicationMenu(null);
 }
 
-function createTrayIcon() {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-      <rect x="6" y="6" width="52" height="52" rx="12" fill="#151b22"/>
-      <rect x="10" y="10" width="44" height="44" rx="10" fill="#0f141a" stroke="#41c7b9" stroke-width="3"/>
-      <path d="M20 24 L29 32 L20 40" fill="none" stroke="#41c7b9" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <rect x="33" y="38" width="12" height="4" rx="2" fill="#f5b85b"/>
+function createWindowIcon() {
+  if (fs.existsSync(iconIcoPath)) {
+    const ico = nativeImage.createFromPath(iconIcoPath);
+    if (!ico.isEmpty()) return ico;
+  }
+
+  if (fs.existsSync(iconSvgPath)) {
+    const svg = fs.readFileSync(iconSvgPath, "utf8");
+    const image = nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
+    if (!image.isEmpty()) {
+      return image.resize({ width: 256, height: 256, quality: "best" });
+    }
+  }
+
+  const fallbackSvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+      <rect x="16" y="16" width="224" height="224" rx="52" fill="#0D1117"/>
+      <rect x="28" y="28" width="200" height="200" rx="44" fill="#121923" stroke="#41C7B9" stroke-width="12"/>
+      <path d="M80 92L120 128L80 164" fill="none" stroke="#41C7B9" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="136" y="156" width="44" height="14" rx="7" fill="#F5B85B"/>
     </svg>`;
-  return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
+  return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(fallbackSvg).toString("base64")}`).resize({ width: 256, height: 256, quality: "best" });
+}
+
+function createTrayIcon() {
+  if (fs.existsSync(iconIcoPath)) {
+    const ico = nativeImage.createFromPath(iconIcoPath);
+    if (!ico.isEmpty()) {
+      return ico.resize({ width: 16, height: 16, quality: "best" });
+    }
+  }
+
+  if (fs.existsSync(iconSvgPath)) {
+    const svg = fs.readFileSync(iconSvgPath, "utf8");
+    const image = nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`);
+    if (!image.isEmpty()) {
+      return image.resize({ width: 16, height: 16, quality: "best" });
+    }
+  }
+
+  const traySvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+      <path d="M18 18L30 32L18 46" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="34" y="42" width="12" height="4" rx="2" fill="#FFFFFF"/>
+    </svg>`;
+  return nativeImage
+    .createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(traySvg).toString("base64")}`)
+    .resize({ width: 16, height: 16, quality: "best" });
 }
 
 function createTray() {

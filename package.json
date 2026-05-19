@@ -52,6 +52,7 @@
       "dist/**/*",
       "electron/**/*",
       "shared/**/*",
+      "assets/**/*",
       "package.json",
       "!**/node_modules/node-pty/prebuilds/darwin-*/**",
       "!**/node_modules/node-pty/prebuilds/linux-*/**",
@@ -76,6 +77,7 @@
       "!**/node_modules/**/.vscode/**"
     ],
     "win": {
+      "icon": "assets/app-icon.ico",
       "signAndEditExecutable": false,
       "target": [
         {

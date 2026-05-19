@@ -160,7 +160,7 @@ npm run dist
 - 文件属性改为真正的弹窗展示
 - 修复分屏终端无法关闭的问题
 - 修复关闭软件时 `Object has been destroyed` 主进程错误
-- 启动器扩展为 Codex、Claude Code、PowerShell、npm、Git 五类工具
+- 启动器扩展为 Codex、Claude Code、Hermes Agent、PowerShell、npm、Git 六类工具
 - 每类启动器带可展开的常用命令子列表
 - 安装包体积优化，并仅保留中文运行时语言包
 
