@@ -117,13 +117,28 @@ const builtInLauncherCommands: Record<string, LauncherCommand[]> = {
     { id: "hermes-reset", name: "重置会话", command: "/reset" },
     { id: "hermes-clear", name: "清空屏幕", command: "/clear" },
     { id: "hermes-model", name: "切换模型", command: "/model " }
+  ],
+  openclaw: [
+    { id: "openclaw-start", name: "启动客户端", command: "openclaw" },
+    { id: "openclaw-config-api", name: "配置接口", command: "openclaw config set api" },
+    { id: "openclaw-config-show", name: "查看配置", command: "openclaw config show" },
+    { id: "openclaw-config-reset", name: "重置配置", command: "openclaw config reset" },
+    { id: "openclaw-doctor", name: "检查修复", command: "openclaw doctor" },
+    { id: "openclaw-version", name: "查看版本", command: "openclaw -v" },
+    { id: "openclaw-new", name: "新建对话", command: "/new" },
+    { id: "openclaw-stop", name: "停止回复", command: "/stop" },
+    { id: "openclaw-model", name: "切换模型", command: "/model " },
+    { id: "openclaw-clear", name: "清空对话", command: "/clear" },
+    { id: "openclaw-exit", name: "退出客户端", command: "/exit" },
+    { id: "openclaw-help", name: "查看内置指令", command: "/help" }
   ]
 };
 
 const builtInLauncherDefs: LauncherPreset[] = [
   { id: "npm", name: "npm", command: "npm", args: [], cwd: "", description: "Node.js 包管理工具", commands: builtInLauncherCommands.npm },
   { id: "git", name: "Git", command: "git", args: [], cwd: "", description: "版本控制工具", commands: builtInLauncherCommands.git },
-  { id: "hermes", name: "Hermes Agent", command: "hermes", args: [], cwd: "", description: "启动 Hermes Agent", commands: builtInLauncherCommands.hermes }
+  { id: "hermes", name: "Hermes Agent", command: "hermes", args: [], cwd: "", description: "启动 Hermes Agent", commands: builtInLauncherCommands.hermes },
+  { id: "openclaw", name: "OpenClaw", command: "openclaw", args: [], cwd: "", description: "启动 OpenClaw", commands: builtInLauncherCommands.openclaw }
 ];
 
 function mergeLauncherCommands(loaded: AppSettings): AppSettings {
