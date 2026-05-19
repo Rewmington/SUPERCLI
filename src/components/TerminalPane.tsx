@@ -78,15 +78,6 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
         return true;
       }
 
-      if (event.type === "keydown" && ctrlOrCmd && key === "v") {
-        void navigator.clipboard.readText().then((text) => {
-          if (text) {
-            void window.desktop.terminal.write({ id: pane.id, data: text });
-          }
-        }).catch(() => undefined);
-        return false;
-      }
-
       return true;
     });
     terminal.open(container);
