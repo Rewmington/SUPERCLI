@@ -64,6 +64,7 @@ function createWindow() {
     minWidth: 1040,
     minHeight: 640,
     title: "SUPER-CLI",
+    icon: createTrayIcon(),
     backgroundColor: "#101419",
     autoHideMenuBar: true,
     webPreferences: {
@@ -84,12 +85,10 @@ function createWindow() {
   }
 
   mainWindow.on("close", (event) => {
-    if (getSettings().minimizeToTray && !isQuitting) {
+    if (!isQuitting) {
       event.preventDefault();
       mainWindow.hide();
       safeSend("app:status", "已最小化到系统托盘");
-    } else {
-      isQuitting = true;
     }
   });
 }

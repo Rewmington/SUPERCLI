@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import type { AppSettings, TerminalPaneState } from "../types";
@@ -47,6 +47,7 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
   const containerRef = useRef<HTMLDivElement | null>(null);
   const terminalRef = useRef<Terminal | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -64,6 +65,30 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
     const fitAddon = new FitAddon();
 
     terminal.loadAddon(fitAddon);
+    terminal.attachCustomKeyEventHandler((event) => {
+      const key = event.key.toLowerCase();
+      const ctrlOrCmd = event.ctrlKey || event.metaKey;
+
+      if (event.type === "keydown" && ctrlOrCmd && key === "c") {
+        if (terminal.hasSelection()) {
+          const selection = terminal.getSelection();
+          void navigator.clipboard.writeText(selection).catch(() => undefined);
+          return false;
+        }
+        return true;
+      }
+
+      if (event.type === "keydown" && ctrlOrCmd && key === "v") {
+        void navigator.clipboard.readText().then((text) => {
+          if (text) {
+            void window.desktop.terminal.write({ id: pane.id, data: text });
+          }
+        }).catch(() => undefined);
+        return false;
+      }
+
+      return true;
+    });
     terminal.open(container);
     fitAddon.fit();
     terminal.focus();
@@ -107,8 +132,48 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
     if (active) terminalRef.current?.focus();
   }, [active]);
 
+  function closeContextMenu() {
+    setContextMenu(null);
+  }
+
+  async function copySelection() {
+    const terminal = terminalRef.current;
+    if (!terminal) return;
+    const text = terminal.getSelection();
+    if (text) {
+      await navigator.clipboard.writeText(text).catch(() => undefined);
+    }
+    closeContextMenu();
+  }
+
+  async function pasteClipboard() {
+    const text = await navigator.clipboard.readText().catch(() => "");
+    if (text) {
+      void window.desktop.terminal.write({ id: pane.id, data: text });
+      terminalRef.current?.focus();
+    }
+    closeContextMenu();
+  }
+
+  function selectAllText() {
+    terminalRef.current?.selectAll();
+    closeContextMenu();
+  }
+
+  function clearScreen() {
+    terminalRef.current?.clear();
+    closeContextMenu();
+  }
+
   return (
-    <section className={`terminal-pane ${active ? "is-active" : ""}`} onMouseDown={() => onFocus(pane.id)}>
+    <section
+      className={`terminal-pane ${active ? "is-active" : ""}`}
+      onMouseDown={() => onFocus(pane.id)}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        setContextMenu({ x: event.clientX, y: event.clientY });
+      }}
+    >
       <header className="pane-header">
         <span>{pane.title}</span>
         <div className="pane-header-right">
@@ -119,6 +184,17 @@ export function TerminalPane({ pane, settings, active, showClose, onFocus, onRea
         </div>
       </header>
       <div className="terminal-surface" ref={containerRef} />
+      {contextMenu && (
+        <div className="ctx-overlay" onClick={closeContextMenu} onContextMenu={(e) => { e.preventDefault(); closeContextMenu(); }}>
+          <div className="ctx-menu terminal-ctx-menu" style={{ top: contextMenu.y, left: contextMenu.x }} onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => void copySelection()}>复制</button>
+            <button onClick={() => void pasteClipboard()}>粘贴</button>
+            <button onClick={selectAllText}>全选</button>
+            <div className="ctx-divider" />
+            <button onClick={clearScreen}>清屏</button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

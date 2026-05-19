@@ -706,6 +706,10 @@ button {
   background: rgba(239, 111, 108, 0.12);
 }
 
+.terminal-ctx-menu {
+  min-width: 140px;
+}
+
 .ctx-divider {
   height: 1px;
   margin: 4px 10px;

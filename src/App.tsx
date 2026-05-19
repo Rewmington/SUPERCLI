@@ -36,7 +36,7 @@ const fallbackSettings: AppSettings = {
   shell: "",
   defaultCwd: "",
   stayOnTop: false,
-  minimizeToTray: false,
+  minimizeToTray: true,
   sounds: { enabled: true, volume: 0.45, aiDone: "", taskDone: "", error: "", newTerminal: "" },
   shortcuts: {
     newTab: "Ctrl+Shift+T",
@@ -825,8 +825,8 @@ export function App() {
               <input type="checkbox" checked={settings.stayOnTop} onChange={(event) => void persistSettings({ ...settings, stayOnTop: event.target.checked })} />
             </label>
             <label className="switch-row">
-              <span>关闭后后台静默运行</span>
-              <input type="checkbox" checked={settings.minimizeToTray} onChange={(event) => void persistSettings({ ...settings, minimizeToTray: event.target.checked })} />
+              <span>关闭窗口后保留后台</span>
+              <input type="checkbox" checked={true} disabled />
             </label>
           </section>
 

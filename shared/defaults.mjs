@@ -6,7 +6,7 @@ export const defaultSettings = {
   shell: "",
   defaultCwd: "",
   stayOnTop: false,
-  minimizeToTray: false,
+  minimizeToTray: true,
   sounds: {
     enabled: true,
     volume: 0.45,
